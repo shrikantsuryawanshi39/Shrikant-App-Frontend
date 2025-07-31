@@ -12,10 +12,7 @@ export const UserProvider = ({ children }) => {
   const getOrg = () => Cookies.get("orgId");
   const orgId = getOrg();
   const jwt = getToken();
-
-  // User List ====>>>>
-  // User List ====>>>>  
-
+  
   //Add user from AddUser.jsx
   const addUser = async (data, reset) => {
     if (!orgId || !jwt) {
