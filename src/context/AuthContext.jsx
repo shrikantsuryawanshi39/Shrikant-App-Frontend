@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     const login = async ({ email, password, orgId }) => {
         try {
             const response = await axios.post(
-                `${API_BASE_URL}/org/${orgId}/user/login`,
+                `${API_BASE_URL}/login/org/${orgId}`,
                 { email, password, orgId },
                 { withCredentials: true }
             );
