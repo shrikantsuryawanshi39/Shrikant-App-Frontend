@@ -5,11 +5,11 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import { UserProvider } from "./context/UserContext.jsx"
 import { ClusterProvider } from "./context/ClusterContext.jsx";
-import { UserClusterProvider } from "./context/UserClusterContext.jsx";
+import { ClusterAssignmentProvider } from "./context/ClusterAssignmentContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <UserClusterProvider>
+    <ClusterAssignmentProvider>
       <AuthProvider>
         <UserProvider>
           <ClusterProvider>
@@ -17,6 +17,6 @@ createRoot(document.getElementById("root")).render(
           </ClusterProvider>
         </UserProvider>
       </AuthProvider>
-    </UserClusterProvider>
+    </ClusterAssignmentProvider>
   </StrictMode>
 );

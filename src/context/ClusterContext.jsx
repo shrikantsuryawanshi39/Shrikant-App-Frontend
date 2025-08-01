@@ -22,7 +22,7 @@ export const ClusterProvider = ({ children }) => {
 
         try {
             const response = await axios.get(
-                `${API_BASE_URL}/org/${orgId}/clusters`,
+                `${API_BASE_URL}/org/${orgId}/cluster`,
                 {
                     headers: {
                         Authorization: jwt,
@@ -73,18 +73,18 @@ export const ClusterProvider = ({ children }) => {
     };
 
     const deleteCluster = async (clusterId) => {
-    try {
-      await axios.delete(`${API_BASE_URL}/org/${orgId}/cluster/${clusterId}`, {
-        withCredentials: true,
-        headers: {
-          Authorization: jwt,
-        },
-      });
-      alert("Cluster deleted successfully.");
-    } catch (error) {
-      console.error("Failed to delete cluster:", error);
-    }
-  };
+        try {
+            await axios.delete(`${API_BASE_URL}/org/${orgId}/cluster/${clusterId}`, {
+                withCredentials: true,
+                headers: {
+                    Authorization: jwt,
+                },
+            });
+            alert("Cluster deleted successfully.");
+        } catch (error) {
+            console.error("Failed to delete cluster:", error);
+        }
+    };
 
     return (
         <ClusterContext.Provider

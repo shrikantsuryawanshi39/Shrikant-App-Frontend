@@ -36,7 +36,7 @@ const ClusterList = () => {
       const result = clustersInPage.filter(
         (cluster) =>
           cluster.name?.toLowerCase().includes(term) ||
-          cluster.clusterId?.toString().includes(term)
+          cluster.id?.toString().includes(term)
       );
       setFilteredClusters(result);
     }
@@ -63,8 +63,8 @@ const ClusterList = () => {
   const handleDeleteCluster = async (clusterId) => {
     if (window.confirm("Are you sure you want to delete this cluster?")) {
       deleteCluster(clusterId);
-      const users = await getClusters();
-      setAllClusters(users);
+      const clusters = await getClusters();
+      setAllClusters(clusters);
     }
   }
 
@@ -102,10 +102,10 @@ const ClusterList = () => {
           <tbody>
             {filteredClusters.map((cluster) => (
               <tr
-                key={cluster.clusterId}
+                key={cluster.id}
                 className="hover:bg-gray-100">
                 <td className="p-2 text-center border font-semibold">
-                  {cluster.clusterId}
+                  {cluster.id}
                 </td>
                 <td className="p-2 text-center border">{cluster.orgId}</td>
                 <td className="p-2 border text-center">{cluster.name}</td>
@@ -120,7 +120,7 @@ const ClusterList = () => {
                     ? new Date(cluster.createdAt).toLocaleString()
                     : "N/A"}
                 </td>
-                <td className="p-1 sm:p-2 border text-center"><button className="px-2 py-0.5 border w-full bg-red-200 hover:bg-red-300 hover:cursor-pointer transition duration-200" onClick={() => { handleDeleteCluster(cluster.clusterId) }}>Delete</button></td>
+                <td className="p-1 sm:p-2 border text-center"><button className="px-2 py-0.5 border w-full bg-red-200 hover:bg-red-300 hover:cursor-pointer transition duration-200" onClick={() => { handleDeleteCluster(cluster.id) }}>Delete</button></td>
               </tr>
             ))}
           </tbody>
