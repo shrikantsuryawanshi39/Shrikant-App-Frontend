@@ -56,11 +56,11 @@ export const GroupProvider = ({ children }) => {
     };
 
     // Add user to group
-    const addUserToGroup = async (groupId, userId) => {
+    const handleUsersInGroup = async (userId, groupId, action) => {
         try {
             const orgId = Cookies.get("orgId");
-            const payload = { userId };
-            await axios.post(`${API_BASE_URL}/orgs/${orgId}/groups/${groupId}/users`, payload, getAuthHeaders());
+            const payload = { id: groupId, action };
+            await axios.post(`${API_BASE_URL}/orgs/${orgId}/user/${userId}`, payload, getAuthHeaders());
             return true;
         } catch (err) {
             console.error("Failed to add user to group", err);
@@ -68,17 +68,16 @@ export const GroupProvider = ({ children }) => {
         }
     };
 
-    // Remove user from group
-    const removeUserFromGroup = async (groupId, userId) => {
+    const getGroupUsers = async (groupId) => {
         try {
             const orgId = Cookies.get("orgId");
-            await axios.delete(`${API_BASE_URL}/orgs/${orgId}/groups/${groupId}/users/${userId}`, getAuthHeaders());
-            return true;
-        } catch (err) {
-            console.error("Failed to remove user from group", err);
-            return false;
+            const res = await axios.get(`${API_BASE_URL}/orgs/${orgId}/groups/${groupId}`, getAuthHeaders());
+            return res.data;
+        } catch (error) {
+            console.error("Failed to get users of this group");
+            return [];
         }
-    };
+    }
 
     return (
         <GroupContext.Provider
@@ -86,8 +85,8 @@ export const GroupProvider = ({ children }) => {
                 getGroups,
                 createGroup,
                 deleteGroup,
-                addUserToGroup,
-                removeUserFromGroup,
+                handleUsersInGroup,
+                getGroupUsers
             }}
         >
             {children}

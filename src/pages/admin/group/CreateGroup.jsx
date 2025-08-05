@@ -13,7 +13,6 @@ const CreateGroup = () => {
         const success = await createGroup({ groupName: data.name, description: data.description });
         if (success) {
             reset();
-            navigate("/groups");
         }
     };
 
