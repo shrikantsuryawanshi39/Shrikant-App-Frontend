@@ -30,42 +30,42 @@ const GroupList = () => {
             </div>
 
             {/* Groups List */}
-           <div className="flex justify-center w-full">
-             <div className="border rounded shadow overflow-y-auto max-h-[70vh] max-w-[80vw] w-full bg-gray-50 scrollbar-custom">
-                <ul className="divide-y divide-gray-300">
-                    {groups.map((group) => (
-                        <li
-                            key={group.groupId}
-                            className="px-4 py-2 m-3 flex justify-between items-center bg-gray-200 hover:bg-gray-300 cursor-pointer transition rounded"
-                            onClick={() => navigate(`/GroupDetails/${group.groupId}`)}
-                        >
-                            {/* Left Side: Group ID + Name + Description */}
-                            <div className="flex justify-center items-center gap-10">
-                                <div className="text-black text-lg font-medium px-4">
-                                    ID: {group.groupId}
-                                </div>
-                                <div className="flex flex-col ml-4">
-                                    <div className="font-semibold text-lg">{group.name}</div>
-                                    <div className="text-gray-600 text-sm">
-                                        {group.description || "No description"}
+            <div className="flex justify-center w-full">
+                <div className="border rounded shadow overflow-y-auto max-h-[70vh] max-w-[80vw] w-full bg-gray-50 scrollbar-custom">
+                    <ul className="divide-y divide-gray-300">
+                        {groups.map((group) => (
+                            <li
+                                key={group.id}
+                                className="px-4 py-2 m-3 flex justify-between items-center bg-gray-200 hover:bg-gray-300 cursor-pointer transition rounded"
+                                onClick={() => navigate(`/GroupDetails/${group.id}`)}
+                            >
+                                {/* Left Side: Group ID + Name + Description */}
+                                <div className="flex justify-center items-center gap-10">
+                                    <div className="text-black text-lg font-medium px-4">
+                                        ID: {group.id}
+                                    </div>
+                                    <div className="flex flex-col ml-4">
+                                        <div className="font-semibold text-lg">{group.name}</div>
+                                        <div className="text-gray-600 text-sm">
+                                            {group.description || "No description"}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Right Side Created At */}
-                            <div className="text-right text-sm text-gray-500">
-                                {group.createdAt
-                                    ? new Date(group.createdAt).toLocaleString()
-                                    : "N/A"}
-                            </div>
-                        </li>
-                    ))}
-                    {groups.length === 0 && (
-                        <li className="p-4 text-center text-gray-500">No groups found for this organization</li>
-                    )}
-                </ul>
+                                {/* Right Side Created At */}
+                                <div className="text-right text-sm text-gray-500">
+                                    {group.createdAt
+                                        ? new Date(group.createdAt).toLocaleString()
+                                        : "N/A"}
+                                </div>
+                            </li>
+                        ))}
+                        {groups.length === 0 && (
+                            <li className="p-4 text-center text-gray-500">No groups found for this organization</li>
+                        )}
+                    </ul>
+                </div>
             </div>
-           </div>
         </div>
     );
 };

@@ -23,26 +23,26 @@ function App() {
   return (
     <div className='main max-h-100vh overflow-hidden bg-white text-black'>
       <BrowserRouter>
-      <Navbar />
-    <Routes>
-      <Route path='/' element={<Home />} />
-      <Route path="/Login" element={<Login />} />
-      <Route path="/Signup" element={<Signup />} />
-      <Route path="/About" element={<About />} />
-      <Route path="/Contact" element={<Contact />} />
-      <Route path="/Administration" element={<Administration />} />
-      <Route path="/AddUser" element={<AddUser />} />
-      <Route path="/AddCluster" element={<AddCluster />} />
-      <Route path="/UserList" element={<UserList />} />
-      <Route path="/ClusterList" element={<ClusterList />} />
-      <Route path="/ClusterAssignment" element={<ClusterAssignment />} />
-      <Route path="/UserClustersList" element={<UserClusterList />} />
-      <Route path="/GroupList" element={<GroupList />} />
-      <Route path="/CreateGroup" element={<CreateGroup />} />
-      <Route path="/GroupDetails" element={<GroupDetails />} />
-    </Routes>
-      <Footer />
-  </BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path="/Login" element={<Login />} />
+          <Route path="/Signup" element={<Signup />} />
+          <Route path="/About" element={<About />} />
+          <Route path="/Contact" element={<Contact />} />
+          <Route path="/Administration" element={<Administration />} />
+          <Route path="/AddUser" element={<AddUser />} />
+          <Route path="/AddCluster" element={<AddCluster />} />
+          <Route path="/UserList" element={<UserList />} />
+          <Route path="/ClusterList" element={<ClusterList />} />
+          <Route path="/ClusterAssignment" element={<ClusterAssignment />} />
+          <Route path="/UserClustersList" element={<UserClusterList />} />
+          <Route path="/GroupList" element={<GroupList />} />
+          <Route path="/CreateGroup" element={<CreateGroup />} />
+          <Route path="/GroupDetails/:id" element={<GroupDetails />} />
+        </Routes>
+        <Footer />
+      </BrowserRouter>
     </div>
   )
 }
