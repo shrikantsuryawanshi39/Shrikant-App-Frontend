@@ -57,11 +57,23 @@ const Administration = () => {
             </NavLink>
           </div>
         </div>
-        <NavLink to="/ClusterAssignment">
+        <div className="w-full flex justify-center items-center gap-10 sm:gap-30 mt-5 bg-gray-300 p-4 rounded-lg shadow-md">
+          <NavLink to="/ClusterAssignment">
           <button className="bg-purple-800 text-white cursor-pointer px-2 py-2 w-30 text-sm sm:w-full sm:text-md rounded ml-4 hover:bg-purple-600 transition duration-300">
             Assign Cluster to User
           </button>
         </NavLink>
+          <NavLink to="/GroupList">
+          <button className="bg-purple-800 text-white cursor-pointer px-2 py-2 w-30 text-sm sm:w-full sm:text-md rounded ml-4 hover:bg-purple-600 transition duration-300">
+           Groups
+          </button>
+        </NavLink>
+          <NavLink to="/GroupDetails">
+          <button className="bg-purple-800 text-white cursor-pointer px-2 py-2 w-30 text-sm sm:w-full sm:text-md rounded ml-4 hover:bg-purple-600 transition duration-300">
+            Add/Remove Users from Group
+          </button>
+        </NavLink>
+        </div>
       </div>
     </div>
   );
