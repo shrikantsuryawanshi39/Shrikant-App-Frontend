@@ -6,9 +6,11 @@ import { AuthProvider } from "./context/AuthContext";
 import { UserProvider } from "./context/UserContext.jsx"
 import { ClusterProvider } from "./context/ClusterContext.jsx";
 import { ClusterAssignmentProvider } from "./context/ClusterAssignmentContext.jsx";
+import { GroupProvider } from "./context/GroupContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <GroupProvider>
     <ClusterAssignmentProvider>
       <AuthProvider>
         <UserProvider>
@@ -18,5 +20,6 @@ createRoot(document.getElementById("root")).render(
         </UserProvider>
       </AuthProvider>
     </ClusterAssignmentProvider>
+    </GroupProvider>
   </StrictMode>
 );
