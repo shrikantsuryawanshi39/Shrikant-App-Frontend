@@ -1,210 +1,246 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import '../../App.css';
 import { useUserContext } from "../../context/UserContext";
+import { useGroupContext } from "../../context/GroupContext";
 import { useClusterAssignmentContext } from "../../context/ClusterAssignmentContext";
 
 const ClusterAssignment = () => {
     const { getUsers } = useUserContext();
+    const { getGroups } = useGroupContext();
     const { toggleClusterAssignment, getClusters } = useClusterAssignmentContext();
 
-    const [allUsers, setAllUsers] = useState([]);
+    const [mode, setMode] = useState("users"); // users | groups
+    const [allEntities, setAllEntities] = useState([]);
     const [assignedClusters, setAssignedClusters] = useState([]);
     const [unAssignedClusters, setUnAssignedClusters] = useState([]);
-    const [selectedUserId, setSelectedUserId] = useState(null);
+    const [selectedEntityId, setSelectedEntityId] = useState(null);
 
-    const [userSearch, setUserSearch] = useState("");
-    const [userSortAsc, setUserSortAsc] = useState(true);
+    const [filters, setFilters] = useState({
+        entities: { search: "", asc: true },
+        assigned: { search: "", asc: true },
+        unassigned: { search: "", asc: true }
+    });
 
-    const [assignedSearch, setAssignedSearch] = useState("");
-    const [assignedSortAsc, setAssignedSortAsc] = useState(true);
-
-    const [unassignedSearch, setUnassignedSearch] = useState("");
-    const [unassignedSortAsc, setUnassignedSortAsc] = useState(true);
-
-    // Fetch users
+    // Fetch users or groups based on mode
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchEntities = async () => {
             try {
-                const users = await getUsers();
-                setAllUsers(users);
+                // entities can be users or groups based on mode
+                const entities = mode === "users" ? await getUsers() : await getGroups();
+                setAllEntities(entities || []);
+                setSelectedEntityId(null);
+                setAssignedClusters([]);
+                setUnAssignedClusters([]);
             } catch (err) {
-                console.error("Error fetching users:", err);
+                console.error(`Error fetching ${mode}:`, err);
             }
         };
-        fetchUsers();
-    }, [getUsers]);
+        fetchEntities();
+    }, [mode, getUsers, getGroups]);
 
-    // Fetch assigned and unassigned clusters for a user
-    const fetchClusters = async (userId) => {
-        if (!userId) {
+    // Fetch clusters
+    const fetchClusters = useCallback(async (entityId) => {
+        if (!entityId) {
             setAssignedClusters([]);
             setUnAssignedClusters([]);
             return;
         }
-
         try {
-            const clusters = await getClusters(userId);
-            setAssignedClusters(clusters?.filter((field) => field?.action == "assign").map((field) => field.cluster));
-            setUnAssignedClusters(clusters?.filter((field) => field?.action == "unassign").map((field) => field.cluster));
-        } catch (error) {
-            console.error("Failed to fetch clusters:", error);
+            const clusters = await getClusters(mode, entityId);
+            setAssignedClusters(clusters?.filter(c => c.action === "assign").map(c => c.cluster) || []);
+            setUnAssignedClusters(clusters?.filter(c => c.action === "unassign").map(c => c.cluster) || []);
+        } catch (err) {
+            console.error("Error fetching clusters:", err);
             setAssignedClusters([]);
             setUnAssignedClusters([]);
         }
-    };
+    }, [getClusters, mode]);
 
+    // Toggle cluster assignment
     const toggleAssignment = async (clusterId, action) => {
-        if (!selectedUserId || !action) return alert("Please select a user first.");
+        if (!selectedEntityId) return alert(`Please select a ${mode.slice(0, -1)} first.`);
         try {
-            const request = {
-                clusterId: clusterId,
-                action: action
-            }
-            await toggleClusterAssignment(selectedUserId, request);
-            await fetchClusters(selectedUserId);
+            const request = { clusterId, action };
+            await toggleClusterAssignment(mode, selectedEntityId, request);
+            await fetchClusters(selectedEntityId);
         } catch (error) {
-            console.error("Failed to assign cluster:", error);
+            console.error("Failed to toggle cluster assignment:", error);
         }
     };
 
-    // Search and sort functions
-    const applySearchAndSort = (items, searchTerm, sortAsc) => {
-        const filtered = items?.filter(item =>
-            item.name?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        return filtered?.sort((a, b) =>
-            sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-        );
-    };
+    // Search + sort
+    const applySearchAndSort = useCallback((items, { search, asc }) => {
+        return (items || [])
+            .filter(item => item?.name?.toLowerCase().includes(search.toLowerCase()))
+            .sort((a, b) => asc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+    }, []);
 
-    const filteredUsers = applySearchAndSort(allUsers, userSearch, userSortAsc);
-    const filteredAssigned = applySearchAndSort(assignedClusters, assignedSearch, assignedSortAsc);
-    const filteredUnassigned = applySearchAndSort(unAssignedClusters, unassignedSearch, unassignedSortAsc);
+    const filteredEntities = useMemo(() =>
+        applySearchAndSort(allEntities, filters.entities),
+        [allEntities, filters.entities, applySearchAndSort]);
+
+    const filteredAssigned = useMemo(() =>
+        applySearchAndSort(assignedClusters, filters.assigned),
+        [assignedClusters, filters.assigned, applySearchAndSort]);
+
+    const filteredUnassigned = useMemo(() =>
+        applySearchAndSort(unAssignedClusters, filters.unassigned),
+        [unAssignedClusters, filters.unassigned, applySearchAndSort]);
 
     return (
         <div className="h-screen bg-gray-100 text-black p-5 overflow-auto">
-            <h1 className="text-3xl font-bold mb-10 text-center">Associate Cluster to User</h1>
+            <h1 className="text-3xl font-bold mb-6 text-center">Associate Cluster</h1>
+
+            {/* Mode Switch */}
+            <div className="flex justify-center mb-6 gap-4">
+                <button
+                    className={`px-4 py-2 rounded ${mode === "users" ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+                    onClick={() => setMode("users")}
+                >
+                    User Mode
+                </button>
+                <button
+                    className={`px-4 py-2 rounded ${mode === "groups" ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+                    onClick={() => setMode("groups")}
+                >
+                    Group Mode
+                </button>
+            </div>
 
             <div className="flex flex-col sm:flex-row justify-around items-start gap-6">
-                {/* Users */}
-                <div className="border rounded bg-white shadow w-xl max-h-[500px]">
+                {/* Entities (Users / Groups) */}
+                <div className="border rounded bg-white shadow w-xl max-h-[500px] overflow-hidden">
                     <div className="p-3 bg-gray-300 flex items-center justify-between rounded-t">
-                        <h2 className="font-semibold text-xl">Users</h2>
-                        <div className="flex gap-2 items-center">
+                        <h2 className="font-semibold text-xl">{mode === "users" ? "Users" : "Groups"}</h2>
+                        <div className="flex gap-3 items-center">
                             <button
-                                className="px-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
-                                onClick={() => setUserSortAsc(prev => !prev)}
-                            >
-                                Sort {userSortAsc ? "↓" : "↑"}
+                                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs cursor-pointer transition"
+                                onClick={() => setFilters(prev => ({
+                                    ...prev,
+                                    entities: { ...prev.entities, asc: !prev.entities.asc }
+                                }))}>
+                                Sort {filters.entities.asc ? "A→Z" : "Z→A"}
                             </button>
-
                             <input
                                 type="text"
-                                className="p-1 px-4 text-sm rounded-2xl border border-gray-600 focus:border-black outline-none"
-                                placeholder="Search user..."
-                                value={userSearch}
-                                onChange={(e) => setUserSearch(e.target.value)}
-                            />
+                                className="py-1 px-4 text-sm border border-gray-500 rounded outline-none"
+                                placeholder={`Search ${mode}...`}
+                                value={filters.entities.search}
+                                onChange={(e) => setFilters(prev => ({
+                                    ...prev,
+                                    entities: { ...prev.entities, search: e.target.value }
+                                }))} />
                         </div>
                     </div>
-                    <ul className="px-4 overflow-y-auto max-h-[450px] scrollbar-hidden">
-                        {filteredUsers?.map((user) => (
-                            <li key={user.id}
+                    <ul className="px-4 py-2 overflow-y-auto max-h-[450px] scrollbar-hidden">
+                        {filteredEntities.map((entity) => (
+                            <li key={entity.id}
                                 onClick={() => {
-                                    setSelectedUserId(user.id);
-                                    fetchClusters(user.id);
+                                    setSelectedEntityId(entity.id);
+                                    fetchClusters(entity.id);
                                 }}
                                 className="cursor-pointer my-2 bg-gray-100 p-2 rounded hover:bg-gray-200 transition-all duration-200">
                                 <label>
                                     <input
                                         type="radio"
-                                        name="selectedUser"
-                                        checked={selectedUserId === user.id}
+                                        name="selectedEntity"
+                                        checked={selectedEntityId === entity.id}
                                         readOnly
                                     />{" "}
-                                    {user.name} ({user.email})
+                                    {entity.name} {mode === "users" && `(${entity.email})`}
                                 </label>
                             </li>
                         ))}
                     </ul>
-                    {filteredUsers.length === 0 && (
-                        <p className="text-center text-purple-800 my-3">No users found.</p>
+                    {filteredEntities.length === 0 && (
+                        <p className="text-center text-purple-800 my-3">No {mode} found.</p>
                     )}
                 </div>
 
+                {/* Assigned & Unassigned clusters (unchanged) */}
                 <div className="flex flex-col items-center justify-center gap-4">
-                    {/* Assigned Clusters */}
-                    <div className="border rounded bg-white shadow w-xl max-h-[250px] overflow-y-auto">
+                    {/* Assigned */}
+                    <div className="border rounded bg-white shadow w-xl max-h-[250px] overflow-y-auto overflow-hidden">
                         <div className="p-3 bg-gray-300 flex items-center justify-between">
                             <h2 className="font-semibold text-xl">Assigned Clusters</h2>
-                            <div className="flex gap-2 items-center">
+                            <div className="flex gap-3 items-center">
                                 <button
-                                    className="px-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
-                                    onClick={() => setAssignedSortAsc(prev => !prev)}
+                                    className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs cursor-pointer transition"
+                                    onClick={() => setFilters(prev => ({
+                                        ...prev,
+                                        assigned: { ...prev.assigned, asc: !prev.assigned.asc }
+                                    }))}
                                 >
-                                    Sort {assignedSortAsc ? "↓" : "↑"}
+                                    Sort {filters.assigned.asc ? "A→Z" : "Z→A"}
                                 </button>
-
                                 <input
                                     type="text"
-                                    className="p-1 px-4 text-sm rounded-2xl border border-gray-600 focus:border-black outline-none"
+                                    className="p-1 px-4 text-sm border border-gray-500 rounded outline-none"
                                     placeholder="Search..."
-                                    value={assignedSearch}
-                                    onChange={(e) => setAssignedSearch(e.target.value)}
+                                    value={filters.assigned.search}
+                                    onChange={(e) => setFilters(prev => ({
+                                        ...prev,
+                                        assigned: { ...prev.assigned, search: e.target.value }
+                                    }))}
                                 />
                             </div>
                         </div>
-                        <ul className="px-4 overflow-y-auto max-h-[200px] scrollbar-hidden">
-                            {filteredAssigned?.map((cluster) => (
+                        <ul className="px-4 py-2 overflow-y-auto max-h-[200px] scrollbar-hidden">
+                            {filteredAssigned.map((cluster) => (
                                 <li key={cluster.id}
                                     onClick={() => toggleAssignment(cluster.id, "unassign")}
                                     className="cursor-pointer my-2 bg-gray-100 p-2 rounded hover:bg-gray-200 transition-all duration-200">
                                     <label>
-                                        <input type="checkbox" checked={true} readOnly />{" "}
+                                        <input type="checkbox" checked readOnly />{" "}
                                         {cluster.name} ({cluster.id})
                                     </label>
                                 </li>
                             ))}
                         </ul>
-                        {filteredAssigned?.length === 0 && (
+                        {filteredAssigned.length === 0 && (
                             <p className="text-center text-purple-800 my-3">No assigned clusters found.</p>
                         )}
                     </div>
 
-                    {/* Unassigned Clusters */}
-                    <div className="border rounded bg-white shadow w-xl max-h-[250px] overflow-y-auto">
+                    {/* Unassigned */}
+                    <div className="border rounded bg-white shadow w-xl max-h-[250px] overflow-hidden">
                         <div className="p-3 bg-gray-300 flex items-center justify-between">
                             <h2 className="font-semibold text-xl">Unassigned Clusters</h2>
-                            <div className="flex gap-2 items-center">
+                            <div className="flex gap-3 items-center">
                                 <button
-                                    className="px-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
-                                    onClick={() => setUnassignedSortAsc(prev => !prev)}
+                                    className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs cursor-pointer transition"
+                                    onClick={() => setFilters(prev => ({
+                                        ...prev,
+                                        unassigned: { ...prev.unassigned, asc: !prev.unassigned.asc }
+                                    }))}
                                 >
-                                    Sort {unassignedSortAsc ? "↓" : "↑"}
+                                    Sort {filters.unassigned.asc ? "A→Z" : "Z→A"}
                                 </button>
-
                                 <input
                                     type="text"
-                                    className="p-1 px-4 text-sm rounded-2xl border border-gray-600 focus:border-black outline-none"
+                                    className="p-1 px-4 text-sm border border-gray-500 rounded outline-none"
                                     placeholder="Search..."
-                                    value={unassignedSearch}
-                                    onChange={(e) => setUnassignedSearch(e.target.value)}
+                                    value={filters.unassigned.search}
+                                    onChange={(e) => setFilters(prev => ({
+                                        ...prev,
+                                        unassigned: { ...prev.unassigned, search: e.target.value }
+                                    }))}
                                 />
                             </div>
                         </div>
-                        <ul className="px-4 overflow-y-auto max-h-[200px] scrollbar-hidden">
-                            {filteredUnassigned?.map((cluster) => (
+                        <ul className="px-4 py-2 overflow-y-auto max-h-[200px] scrollbar-hidden">
+                            {filteredUnassigned.map((cluster) => (
                                 <li key={cluster.id}
                                     onClick={() => toggleAssignment(cluster.id, "assign")}
                                     className="cursor-pointer my-2 bg-gray-100 p-2 rounded hover:bg-gray-200 transition-all duration-200">
                                     <label>
-                                        <input type="checkbox" checked={false} readOnly />{" "}
+                                        <input type="checkbox" readOnly />{" "}
                                         {cluster.name} ({cluster.id})
                                     </label>
                                 </li>
                             ))}
                         </ul>
-                        {filteredUnassigned?.length === 0 && (
+                        {filteredUnassigned.length === 0 && (
                             <p className="text-center text-purple-800 my-3">No unassigned clusters found.</p>
                         )}
                     </div>
@@ -214,4 +250,4 @@ const ClusterAssignment = () => {
     );
 };
 
-export default ClusterAssignment;  
+export default ClusterAssignment;
